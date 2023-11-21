@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -83,12 +84,15 @@ func (r Repository) fetchGet() *http.Response {
 func (r *Repository) fetchData() {
 	for {
 		data := r.fetchGet()
-
+		
 		defer data.Body.Close()
 
 		var result map[string]interface{}
 
 		err := json.NewDecoder(data.Body).Decode(&result)
+		
+		r.saveJsonFile(data)
+
 
 		if err != nil {
 			log.Fatal("Fail to decode json response from API")
@@ -159,4 +163,20 @@ func (r Repository) codeDownloadLikeZip(owner string, repoFullName string) {
 // StartDownloads get sync downloads from repository
 func (r Repository) StartDownloads() {
 	r.fetchData()
+}
+
+func (r Repository) saveJsonFile(response *http.Response){
+	body, err := io.ReadAll(response.Body)
+	if err != nil{
+		log.Println("Fail to save json file")
+		return 
+	}
+	
+	err = ioutil.WriteFile("json/"+r.Language + ".json", body, 0644)
+	if err != nil{
+		log.Println("fail to write json file")
+		return
+	}
+	
+	log.Println("json file saved")
 }

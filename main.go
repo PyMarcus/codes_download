@@ -12,6 +12,7 @@ func main() {
 	log.Println(c.YELLOW + "Starting ...")
 
 	os.MkdirAll("data", os.ModePerm)
+	os.MkdirAll("json", os.ModePerm)
 
 	args := os.Args[1:]
 	if len(args) < 2{
