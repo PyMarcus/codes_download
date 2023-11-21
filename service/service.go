@@ -9,10 +9,13 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 
 	c "github.com/PyMarcus/codes_download/constants"
 	tools "github.com/PyMarcus/codes_download/tools"
 )
+
+var wg sync.WaitGroup
 
 /*
 	Repository receives Language: python,
@@ -107,9 +110,10 @@ func (r *Repository) fetchData() {
 			log.Println("\n\n", c.GREEN)
 			log.Printf("Owner: %s\nRepository: %s\nDescription: %s\nURL: %s\n\n", owner, repo["name"], repo["description"], repo["html_url"])
 			log.Println(c.RESET)
-			r.codeDownloadLikeZip(owner, repo["full_name"].(string))
+			wg.Add(1)
+			go r.codeDownloadLikeZip(owner, repo["full_name"].(string))
 		}
-
+		wg.Wait()
 		r.page++
 
 		if r.page*r.perPage >= int(total) {
@@ -119,6 +123,7 @@ func (r *Repository) fetchData() {
 }
 
 func (r Repository) codeDownloadLikeZip(owner string, repoFullName string) {
+	defer wg.Done()
 	url := fmt.Sprintf("https://github.com/%s/archive/%s.zip", repoFullName, "main")
 
 	log.Println("FETCH ", url)
