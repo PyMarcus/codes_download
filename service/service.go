@@ -124,7 +124,6 @@ func (r Repository) codeDownloadLikeZip(owner string, repoFullName string) {
 	url := fmt.Sprintf("https://github.com/%s/archive/%s.zip", repoFullName, "main")
 
 	log.Println("FETCH ", url)
-	client := &http.Client{}
 
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -134,7 +133,7 @@ func (r Repository) codeDownloadLikeZip(owner string, repoFullName string) {
 
 	request.Header.Add("Authorization", "token "+tools.GetGithubWebToken())
 
-	response, err := client.Do(request)
+	response, err := r.httpClient.Do(request)
 
 	if err != nil {
 		log.Println(c.RED+"Fail to get download response:", err)
@@ -148,7 +147,7 @@ func (r Repository) codeDownloadLikeZip(owner string, repoFullName string) {
 		log.Println("Redirected to:", redirectURL)
 
 		// Fazer uma nova solicitação para a URL redirecionada
-		response, err = client.Get(redirectURL)
+		response, err = r.httpClient.Get(redirectURL)
 		if err != nil {
 			log.Println(c.RED + "Fail to get redirected response:", err)
 			return
