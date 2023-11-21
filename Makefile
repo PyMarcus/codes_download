@@ -1,5 +1,5 @@
 run: build
-	@./bin/codes_download python true
+	@./bin/codes_download rust true
 
 build:
 	@go build -o bin/codes_download 

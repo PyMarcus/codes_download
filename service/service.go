@@ -27,6 +27,7 @@ type Repository struct {
 	OrderByStars bool   `json:"order_by_stars"`
 	page         int
 	perPage      int
+	httpClient   *http.Client
 }
 
 // NewRepository create a new object with info to request
@@ -36,6 +37,7 @@ func NewRepository(language string, orderByStars bool) *Repository {
 		OrderByStars: orderByStars,
 		page:         1,
 		perPage:      100,
+		httpClient:   &http.Client{},
 	}
 }
 
@@ -70,8 +72,7 @@ func (r Repository) fetchGet() *http.Response {
 		log.Fatal(nil)
 	}
 
-	httpClient := &http.Client{}
-	response, err := httpClient.Do(request)
+	response, err := r.httpClient.Do(request)
 
 	if err != nil {
 		log.Fatal(err)
@@ -86,9 +87,7 @@ func (r Repository) fetchGet() *http.Response {
 
 func (r *Repository) fetchData() {
 	data2 := r.fetchGet() // solucao por hora pra n limpar o ponteiro da memoria
-
 	r.saveJsonFile(data2)
-
 	for {
 		data := r.fetchGet()
 		
@@ -111,10 +110,8 @@ func (r *Repository) fetchData() {
 			log.Println("\n\n", c.GREEN)
 			log.Printf("Owner: %s\nRepository: %s\nDescription: %s\nURL: %s\n\n", owner, repo["name"], repo["description"], repo["html_url"])
 			log.Println(c.RESET)
-			wg.Add(1)
-			go r.codeDownloadLikeZip(owner, repo["full_name"].(string))
+			r.codeDownloadLikeZip(owner, repo["full_name"].(string))
 		}
-		wg.Wait()
 		r.page++
 
 		if r.page*r.perPage >= int(total) {
@@ -124,7 +121,6 @@ func (r *Repository) fetchData() {
 }
 
 func (r Repository) codeDownloadLikeZip(owner string, repoFullName string) {
-	defer wg.Done()
 	url := fmt.Sprintf("https://github.com/%s/archive/%s.zip", repoFullName, "main")
 
 	log.Println("FETCH ", url)
@@ -146,6 +142,18 @@ func (r Repository) codeDownloadLikeZip(owner string, repoFullName string) {
 	}
 
 	defer response.Body.Close()
+	
+	if response.StatusCode == http.StatusSeeOther || response.StatusCode == http.StatusFound {
+		redirectURL := response.Header.Get("Location")
+		log.Println("Redirected to:", redirectURL)
+
+		// Fazer uma nova solicitação para a URL redirecionada
+		response, err = client.Get(redirectURL)
+		if err != nil {
+			log.Println(c.RED + "Fail to get redirected response:", err)
+			return
+		}
+	}
 
 	if response.StatusCode != http.StatusOK {
 		log.Println(c.RED+" ERR status code ", response.StatusCode)
