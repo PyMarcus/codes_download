@@ -84,6 +84,7 @@ func (r Repository) fetchGet() *http.Response {
 func (r *Repository) fetchData() {
 	for {
 		data := r.fetchGet()
+		data2 := r.fetchGet() // solucao por hora pra n limpar o ponteiro da memoria
 		
 		defer data.Body.Close()
 
@@ -91,7 +92,7 @@ func (r *Repository) fetchData() {
 
 		err := json.NewDecoder(data.Body).Decode(&result)
 		
-		r.saveJsonFile(data)
+		r.saveJsonFile(data2)
 
 
 		if err != nil {
@@ -177,6 +178,8 @@ func (r Repository) saveJsonFile(response *http.Response){
 		log.Println("fail to write json file")
 		return
 	}
+	
+	defer response.Body.Close()
 	
 	log.Println("json file saved")
 }
