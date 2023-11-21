@@ -85,9 +85,11 @@ func (r Repository) fetchGet() *http.Response {
 }
 
 func (r *Repository) fetchData() {
+	data2 := r.fetchGet() // solucao por hora pra n limpar o ponteiro da memoria
+
+	r.saveJsonFile(data2)
 	for {
 		data := r.fetchGet()
-		data2 := r.fetchGet() // solucao por hora pra n limpar o ponteiro da memoria
 		
 		defer data.Body.Close()
 
@@ -95,8 +97,6 @@ func (r *Repository) fetchData() {
 
 		err := json.NewDecoder(data.Body).Decode(&result)
 		
-		r.saveJsonFile(data2)
-
 
 		if err != nil {
 			log.Fatal("Fail to decode json response from API")
