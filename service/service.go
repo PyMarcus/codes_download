@@ -156,7 +156,26 @@ func (r Repository) codeDownloadLikeZip(owner string, repoFullName string) {
 
 	if response.StatusCode != http.StatusOK {
 		log.Println(c.RED+" ERR status code ", response.StatusCode)
-		return
+		if response.StatusCode == http.StatusNotFound{
+			url := fmt.Sprintf("https://github.com/%s/archive/%s.zip", repoFullName, "master")
+
+			log.Println(c.YELLOW + "RETRY FETCH ", url)
+
+			request, err := http.NewRequest("GET", url, nil)
+			if err != nil {
+				log.Println(c.RED+"Fail to create request:", err)
+				return
+			}
+
+			request.Header.Add("Authorization", "token "+tools.GetGithubWebToken())
+
+			response, err = r.httpClient.Do(request)
+
+			if err != nil {
+				log.Println(c.RED+"Fail to get download response:", err)
+				return
+			}
+		}
 	}
 
 	fout, err := os.Create(fmt.Sprintf("data/%s.zip", strings.Split(repoFullName, "/")[1]))
