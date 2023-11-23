@@ -157,7 +157,7 @@ func (r Repository) codeDownloadLikeZip(owner string, repoFullName string) {
 	if response.StatusCode != http.StatusOK {
 		log.Println(c.RED+" ERR status code ", response.StatusCode)
 		if response.StatusCode == http.StatusNotFound{
-			url := fmt.Sprintf("https://github.com/%s/archive/%s.zip", repoFullName, "master")
+			url = fmt.Sprintf("https://github.com/%s/archive/%s.zip", repoFullName, "master")
 
 			log.Println(c.YELLOW + "RETRY FETCH ", url)
 
