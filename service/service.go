@@ -97,16 +97,17 @@ func (r Repository) insertIntoDatabase(jsonPath string){
 }
 
 func (r *Repository) fetchData() {
-	data2 := r.fetchGet()
-	r.saveJsonFile(data2)
-	
-	wgdb.Add(1)
-	go r.insertIntoDatabase("json/" + r.Language + ".json")
-	
+		
 	for {
 		data := r.fetchGet()
+		data2 := r.fetchGet()
+		r.saveJsonFile(data2)
+		
+		wgdb.Add(1)
+		go r.insertIntoDatabase("json/" + r.Language + ".json")
 		
 		defer data.Body.Close()
+		defer data2.Body.Close()
 
 		var result map[string]interface{}
 
