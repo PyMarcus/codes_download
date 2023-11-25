@@ -17,3 +17,15 @@ func GetGithubWebToken() string {
 
 	return os.Getenv("GITHUB_TOKEN")
 }
+
+func GetDataBaseCredentials() map[string]interface{}{
+	g.Load(".env")
+
+	var credentials = make(map[string]interface{})
+	credentials["user"] = os.Getenv("USER_DB")
+	credentials["password"] = os.Getenv("PASSWORD_DB")
+	credentials["port"] = os.Getenv("PORT_DB")
+	credentials["host"] = os.Getenv("HOST_DB")
+	credentials["database"] = os.Getenv("DATABASE_DB")
+	return credentials
+}

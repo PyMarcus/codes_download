@@ -10,7 +10,7 @@ import (
 
 func main() {
 	log.Println(c.YELLOW + "Starting ...")
-
+	
 	os.MkdirAll("data", os.ModePerm)
 	os.MkdirAll("json", os.ModePerm)
 

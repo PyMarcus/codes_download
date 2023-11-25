@@ -13,9 +13,12 @@ import (
 
 	c "github.com/PyMarcus/codes_download/constants"
 	tools "github.com/PyMarcus/codes_download/tools"
+	rep "github.com/PyMarcus/codes_download/repository"
+
 )
 
 var wg sync.WaitGroup
+var wgdb sync.WaitGroup
 
 /*
 	Repository receives Language: python,
@@ -85,9 +88,21 @@ func (r Repository) fetchGet() *http.Response {
 	return response
 }
 
+// insert data into database
+func (r Repository) insertIntoDatabase(jsonPath string){
+	defer wgdb.Done()
+	
+	rep.Insert(jsonPath)
+	
+}
+
 func (r *Repository) fetchData() {
-	data2 := r.fetchGet() // solucao por hora pra n limpar o ponteiro da memoria
+	data2 := r.fetchGet()
 	r.saveJsonFile(data2)
+	
+	wgdb.Add(1)
+	go r.insertIntoDatabase("json/" + r.Language + ".json")
+	
 	for {
 		data := r.fetchGet()
 		
@@ -110,17 +125,24 @@ func (r *Repository) fetchData() {
 			log.Println("\n\n", c.GREEN)
 			log.Printf("Owner: %s\nRepository: %s\nDescription: %s\nURL: %s\n\n", owner, repo["name"], repo["description"], repo["html_url"])
 			log.Println(c.RESET)
+			wg.Add(1)
 			r.codeDownloadLikeZip(owner, repo["full_name"].(string))
 		}
+		
+		wg.Wait()
 		r.page++
 
 		if r.page*r.perPage >= int(total) {
 			break
 		}
 	}
+	
+	wgdb.Wait()
 }
 
 func (r Repository) codeDownloadLikeZip(owner string, repoFullName string) {
+	defer wg.Done()
+
 	url := fmt.Sprintf("https://github.com/%s/archive/%s.zip", repoFullName, "main")
 
 	log.Println("FETCH ", url)
