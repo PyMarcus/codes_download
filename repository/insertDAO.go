@@ -25,13 +25,14 @@ func Insert(jsonPath string) {
 
     defer func() {
         if err != nil {
-            log.Println("rolling back transaction due to error:", err)
-            tx.Rollback(context.Background())
+            log.Println("fail to insert data", err)
+            // log.Println("rolling back transaction due to error:", err)
+            // tx.Rollback(context.Background())
         } else {
             log.Println("OK! Trying to commit")
             err = tx.Commit(context.Background())
             if err != nil {
-                log.Fatal("failed to commit transaction:", err)
+                log.Println("failed to commit transaction:", err)
             }
         }
         conn.Close()
