@@ -101,6 +101,7 @@ func (r *Repository) fetchData() {
 	for {
 		data := r.fetchGet()
 		data2 := r.fetchGet()
+		log.Println("HEADER1 ", data.Header, " HEADER2 ", data2.Header)
 		r.saveJsonFile(data2)
 		
 		wgdb.Add(1)
@@ -123,11 +124,12 @@ func (r *Repository) fetchData() {
 		for _, item := range items {
 			repo := item.(map[string]interface{})
 			owner := strings.Split(repo["full_name"].(string), "/")[0]
+			branch := repo["default_branch"]
 			log.Println("\n\n", c.GREEN)
 			log.Printf("Owner: %s\nRepository: %s\nDescription: %s\nURL: %s\n\n", owner, repo["name"], repo["description"], repo["html_url"])
 			log.Println(c.RESET)
 			wg.Add(1)
-			r.codeDownloadLikeZip(owner, repo["full_name"].(string))
+			r.codeDownloadLikeZip(owner, repo["full_name"].(string), branch.(string))
 		}
 		
 		wg.Wait()
@@ -141,10 +143,10 @@ func (r *Repository) fetchData() {
 	wgdb.Wait()
 }
 
-func (r Repository) codeDownloadLikeZip(owner string, repoFullName string) {
+func (r Repository) codeDownloadLikeZip(owner string, repoFullName string, branch string) {
 	defer wg.Done()
 
-	url := fmt.Sprintf("https://github.com/%s/archive/%s.zip", repoFullName, "main")
+	url := fmt.Sprintf("https://github.com/%s/archive/%s.zip", repoFullName, branch)
 
 	log.Println("FETCH ", url)
 

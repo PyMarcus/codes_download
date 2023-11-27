@@ -92,21 +92,21 @@ func Insert(jsonPath string) {
     
     
     rand.Seed(time.Now().UnixNano())
-	randomNumber := rand.Intn(1000000000)
+	// randomNumber := rand.Intn(1000000000)
 
     log.Println("inserting topics")
     for _, topic := range topics {
         query := `
 		INSERT INTO tb_topics (
-			id_topic, id_item, topic_name
+			id_item, topic_name
 		) 
 		VALUES (
-			$1, $2, $3
+			$1, $2
 		)`
-		randomNumber = rand.Intn(1000000000)
+		// randomNumber = rand.Intn(1000000000)
 
         if _, err := tx.Exec(context.Background(), query,
-		randomNumber, itemId, topic.TopicName); err != nil {
+		itemId, topic.TopicName); err != nil {
             log.Println("error inserting topics:", err)
             return
         }
@@ -116,19 +116,19 @@ func Insert(jsonPath string) {
     for _, owner := range owners {
         query := `
 		INSERT INTO tb_owner (
-			id_owner, id_item, login, id, node_id, avatar_url, gravatar_id, 
+			 id_item, login, id, node_id, avatar_url, gravatar_id, 
 			url, html_url, followers_url, following_url, gists_url, starred_url, 
 			subscriptions_url, organizations_url, repos_url, events_url, 
 			received_events_url, type, site_admin
 		) 
 		VALUES (
 			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, 
-			$17, $18, $19, $20
+			$17, $18, $19
 		)`
-		randomNumber = rand.Intn(1000000000)
+		// randomNumber = rand.Intn(1000000000)
 
         if _, err := tx.Exec(context.Background(), query,
-		randomNumber, itemId, owner.Login, strconv.Itoa(owner.Id), owner.NodeID,
+		 itemId, owner.Login, strconv.Itoa(owner.Id), owner.NodeID,
             owner.AvatarURL, owner.GravatarID, owner.URL, owner.HTMLURL,
             owner.FollowersURL, owner.FollowingURL, owner.GistsURL, owner.StarredURL,
             owner.SubscriptionsURL, owner.OrganizationsURL, owner.ReposURL,
@@ -142,15 +142,15 @@ func Insert(jsonPath string) {
     for _, license := range licenses {
         query := `
 		INSERT INTO tb_license (
-			id_license, id_item, key, name, spdx_id, url, node_id
+			 id_item, key, name, spdx_id, url, node_id
 		) 
 		VALUES (
-			$1, $2, $3, $4, $5, $6, $7
+			$1, $2, $3, $4, $5, $6
 		)`
-		randomNumber = rand.Intn(1000000000)
+		// randomNumber = rand.Intn(1000000000)
 
         if _, err := tx.Exec(context.Background(), query,
-		randomNumber, itemId, license.Key, license.Name,
+		 itemId, license.Key, license.Name,
             license.SPDXID, license.URL, license.NodeID); err != nil {
             log.Println("error inserting licenses:", err)
             return
