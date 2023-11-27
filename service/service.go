@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 	"sync"
 
 	c "github.com/PyMarcus/codes_download/constants"
@@ -21,38 +22,61 @@ var wg sync.WaitGroup
 var wgdb sync.WaitGroup
 
 /*
-	Repository receives Language: python,
-
-go, ruby, c++ etc. OrderByStars: false
+   Repository receives Language: python,
+   go, ruby, c++ etc. OrderByStars: false
 */
 type Repository struct {
 	Language     string `json:"language"`
 	OrderByStars bool   `json:"order_by_stars"`
 	page         int
 	perPage      int
+	month       int
+	year        int
 	httpClient   *http.Client
 }
 
 // NewRepository create a new object with info to request
-func NewRepository(language string, orderByStars bool) *Repository {
+func NewRepository(language string, orderByStars bool, year int) *Repository {
 	return &Repository{
 		Language:     language,
 		OrderByStars: orderByStars,
 		page:         1,
-		perPage:      100,
+		perPage:      200,
+		month:        0,
+		year:         year,
 		httpClient:   &http.Client{},
 	}
 }
 
-func (r Repository) getUrl(page, perPage int) string {
-	if r.OrderByStars {
-		return fmt.Sprintf("https://api.github.com/search/repositories?q=language:%s&sort=stars&order=desc&page=%d&per_page=%d", r.Language, page, perPage)
+func (r Repository) getDate() string{
+	startDate := time.Date(r.year, time.January, 1, 0, 0, 0, 0, time.UTC)
+
+	datetimes := []string{}
+
+	for i := 0; i < 12; i++ {
+		mesAtual := startDate.Month()
+		ultimoDia := time.Date(startDate.Year(), mesAtual+1, 0, 0, 0, 0, 0, time.UTC)
+
+		str := fmt.Sprintf("%sX%s", startDate.Format("2006-01-02T15:04:00"), ultimoDia.Format("2006-01-02T15:04:00"))
+		datetimes = append(datetimes, str)
+
+		// Atualiza para o próximo mês
+		startDate = ultimoDia.Add(24 * time.Hour)
 	}
-	return fmt.Sprintf("https://api.github.com/search/repositories?q=language:%s&sort=stars&order=asc&page=%d&per_page=%d", r.Language, page, perPage)
+
+	return datetimes[r.month]
+}
+
+func (r Repository) getUrl(page, perPagem, month int) string {
+    date := strings.Split(r.getDate(), "X")
+    startDate := date[0]
+    endDate := date[1]
+	url := fmt.Sprintf("https://api.github.com/search/repositories?q=language:%s+created:%s..%sZ&order=asc&per_page=%d", r.Language, startDate, endDate, r.perPage)
+	return url
 }
 
 func (r Repository) createRequest() (*http.Request, error) {
-	url := r.getUrl(r.page, r.perPage)
+	url := r.getUrl(r.page, r.perPage, r.month)
 
 	log.Println(c.GREEN + url + c.RESET)
 
@@ -101,7 +125,6 @@ func (r *Repository) fetchData() {
 	for {
 		data := r.fetchGet()
 		data2 := r.fetchGet()
-		log.Println("HEADER1 ", data.Header, " HEADER2 ", data2.Header)
 		r.saveJsonFile(data2)
 		
 		wgdb.Add(1)
@@ -134,6 +157,7 @@ func (r *Repository) fetchData() {
 		
 		wg.Wait()
 		r.page++
+		r.month ++
 
 		if r.page*r.perPage >= int(total) {
 			break
